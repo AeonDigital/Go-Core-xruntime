@@ -1,0 +1,12 @@
+# ==============================================================================
+# Project Metadata Configuration
+# ==============================================================================
+
+# Architectural project classification type (values: app, cli, api, lib)
+PROJECT_TYPE=<project_type>
+
+# Main package name used as prefix for public modules
+MAIN_PKG=<main_pkg>
+
+# Minimum coverage percent gate required to pass the test suite
+COVERAGE_THRESHOLD=80
