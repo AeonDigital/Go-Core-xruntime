@@ -3,10 +3,10 @@
 # ==============================================================================
 
 # Architectural project classification type (values: app, cli, api, lib)
-PROJECT_TYPE=<project_type>
+PROJECT_TYPE=lib
 
 # Main package name used as prefix for public modules
-MAIN_PKG=<main_pkg>
+MAIN_PKG=xruntime
 
 # Minimum coverage percent gate required to pass the test suite
-COVERAGE_THRESHOLD=80
+COVERAGE_THRESHOLD=100
