@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AeonDigital/Go-Core-xerrors/pkg/xerrors"
 	"github.com/AeonDigital/Go-Core-xruntime/pkg/xruntime"
 )
 
@@ -241,5 +242,219 @@ func TestStart_DefaultDirectoriesFallback(t *testing.T) {
 	}
 	if !strings.HasSuffix(rc.UserLogDir, appName) {
 		t.Errorf("expected UserLogDir to end with %s, got %s", appName, rc.UserLogDir)
+	}
+}
+
+func TestReset_NilConfig(t *testing.T) {
+	err := xruntime.Reset(nil, nil, nil)
+	if err != nil {
+		t.Errorf("expected nil error for nil runtimeConfig, got: %v", err)
+	}
+}
+
+func TestReset_PreResetReturnsFalse(t *testing.T) {
+	tempBase := t.TempDir()
+	logDir := filepath.Join(tempBase, "logs")
+	dataDir := filepath.Join(tempBase, "data")
+	appName := "resettest1"
+
+	rc, err := xruntime.Start(appName, runtimeTestFS, logDir, dataDir)
+	if err != nil {
+		t.Fatalf("start failed: %v", err)
+	}
+
+	preCalled := false
+	posCalled := false
+
+	preReset := func() (bool, error) {
+		preCalled = true
+		return false, nil
+	}
+	posReset := func() error {
+		posCalled = true
+		return nil
+	}
+
+	err = rc.Reset(preReset, posReset)
+	if err == nil {
+		t.Fatal("expected error when preReset returns false, got nil")
+	}
+
+	cliErr, ok := err.(xerrors.IErrorCLI)
+	if !ok {
+		t.Fatalf("expected error to implement xerrors.IErrorCLI, got %T", err)
+	}
+
+	expectedUserMsg := "não foi possível efetuar o reset devido a uma falha de condições primárias"
+	if cliErr.GetUserMessage() != expectedUserMsg {
+		t.Errorf("expected GetUserMessage() = %q, got %q", expectedUserMsg, cliErr.GetUserMessage())
+	}
+
+	if !preCalled {
+		t.Error("expected preReset to be called")
+	}
+	if posCalled {
+		t.Error("expected posReset NOT to be called when preReset returns false")
+	}
+
+	// Directories must still exist
+	if _, statErr := os.Stat(rc.UserDataDir); os.IsNotExist(statErr) {
+		t.Error("expected UserDataDir to still exist")
+	}
+}
+
+func TestReset_PreResetReturnsError(t *testing.T) {
+	tempBase := t.TempDir()
+	logDir := filepath.Join(tempBase, "logs")
+	dataDir := filepath.Join(tempBase, "data")
+	appName := "resettest2"
+
+	rc, err := xruntime.Start(appName, runtimeTestFS, logDir, dataDir)
+	if err != nil {
+		t.Fatalf("start failed: %v", err)
+	}
+
+	expectedErr := os.ErrPermission
+
+	preReset := func() (bool, error) {
+		return false, expectedErr
+	}
+
+	err = rc.Reset(preReset, nil)
+	if err != expectedErr {
+		t.Errorf("expected error %v, got %v", expectedErr, err)
+	}
+}
+
+func TestReset_SuccessfulResetAndPosReset(t *testing.T) {
+	tempBase := t.TempDir()
+	logDir := filepath.Join(tempBase, "logs")
+	dataDir := filepath.Join(tempBase, "data")
+	appName := "resettest3"
+
+	rc, err := xruntime.Start(appName, runtimeTestFS, logDir, dataDir)
+	if err != nil {
+		t.Fatalf("start failed: %v", err)
+	}
+
+	userDataDir := rc.UserDataDir
+	userLogDir := rc.UserLogDir
+
+	preCalled := false
+	posCalled := false
+
+	preReset := func() (bool, error) {
+		preCalled = true
+		return true, nil
+	}
+	posReset := func() error {
+		posCalled = true
+		return nil
+	}
+
+	err = rc.Reset(preReset, posReset)
+	if err != nil {
+		t.Fatalf("expected Reset to succeed, got: %v", err)
+	}
+
+	if !preCalled {
+		t.Error("expected preReset to be called")
+	}
+	if !posCalled {
+		t.Error("expected posReset to be called")
+	}
+
+	// Directories must be deleted
+	if _, statErr := os.Stat(userDataDir); !os.IsNotExist(statErr) {
+		t.Errorf("expected UserDataDir to be deleted, statErr: %v", statErr)
+	}
+	if _, statErr := os.Stat(userLogDir); !os.IsNotExist(statErr) {
+		t.Errorf("expected UserLogDir to be deleted, statErr: %v", statErr)
+	}
+}
+
+func TestReset_PosResetReturnsError(t *testing.T) {
+	tempBase := t.TempDir()
+	logDir := filepath.Join(tempBase, "logs")
+	dataDir := filepath.Join(tempBase, "data")
+	appName := "resettest4"
+
+	rc, err := xruntime.Start(appName, runtimeTestFS, logDir, dataDir)
+	if err != nil {
+		t.Fatalf("start failed: %v", err)
+	}
+
+	expectedErr := os.ErrInvalid
+	posReset := func() error {
+		return expectedErr
+	}
+
+	err = rc.Reset(nil, posReset)
+	if err != expectedErr {
+		t.Errorf("expected error %v, got %v", expectedErr, err)
+	}
+}
+
+func TestReset_DeleteUserLogDirError(t *testing.T) {
+	tempBase := t.TempDir()
+	logDir := filepath.Join(tempBase, "logs")
+	dataDir := filepath.Join(tempBase, "data")
+	appName := "resettest5"
+
+	rc, err := xruntime.Start(appName, runtimeTestFS, logDir, dataDir)
+	if err != nil {
+		t.Fatalf("start failed: %v", err)
+	}
+
+	// Close log file descriptor before changing dir permissions
+	if rc.CurrentFileSessionLog != nil {
+		_ = rc.CurrentFileSessionLog.Close()
+		rc.CurrentFileSessionLog = nil
+	}
+
+	// Make log directory read-only so deleting files inside fails
+	if err := os.Chmod(rc.UserLogDir, 0o555); err != nil {
+		t.Fatalf("failed to chmod user log dir: %v", err)
+	}
+	defer func() {
+		_ = os.Chmod(rc.UserLogDir, 0o755)
+	}()
+
+	err = rc.Reset(nil, nil)
+	if err == nil {
+		t.Error("expected error when deleting read-only UserLogDir, got nil")
+	}
+}
+
+func TestReset_DeleteUserDataDirError(t *testing.T) {
+	tempBase := t.TempDir()
+	logDir := filepath.Join(tempBase, "logs")
+	dataDir := filepath.Join(tempBase, "data")
+	appName := "resettest6"
+
+	rc, err := xruntime.Start(appName, runtimeTestFS, logDir, dataDir)
+	if err != nil {
+		t.Fatalf("start failed: %v", err)
+	}
+
+	// Remove log directory so it succeeds for UserLogDir step
+	if rc.CurrentFileSessionLog != nil {
+		_ = rc.CurrentFileSessionLog.Close()
+		rc.CurrentFileSessionLog = nil
+	}
+	_ = os.RemoveAll(rc.UserLogDir)
+	rc.UserLogDir = ""
+
+	// Make user data directory read-only so deleting files inside fails
+	if err := os.Chmod(rc.UserDataDir, 0o555); err != nil {
+		t.Fatalf("failed to chmod user data dir: %v", err)
+	}
+	defer func() {
+		_ = os.Chmod(rc.UserDataDir, 0o755)
+	}()
+
+	err = rc.Reset(nil, nil)
+	if err == nil {
+		t.Error("expected error when deleting read-only UserDataDir, got nil")
 	}
 }

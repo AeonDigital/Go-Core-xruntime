@@ -102,12 +102,32 @@ type RuntimeConfig struct {
 	Context context.Context `json:"-"`
 }
 
+// PreResetFunc represents a callback function executed prior to deleting application runtime directories.
+// It returns a boolean flag indicating if reset should proceed and an error if pre-validation fails.
+type PreResetFunc func() (bool, error)
+
+// PostResetFunc represents a callback function executed after application runtime directories are deleted.
+// It returns an error if post-reset cleanup operations fail.
+type PostResetFunc func() error
+
 // End gracefully finalizes the runtime configuration, closing active log files and performing log rotations if needed.
 //
 // Returns:
 //   - error: An error if closing log files or archiving logs fails, nil otherwise.
 func (rc *RuntimeConfig) End() error {
 	return End(rc)
+}
+
+// Reset deletes the application log and user data directories associated with the runtime configuration.
+//
+// Parameters:
+//   - preReset: Optional callback executed before resetting directories.
+//   - posReset: Optional callback executed after resetting directories.
+//
+// Returns:
+//   - error: An error if preReset fails or returns false, directory deletion fails, or posReset fails; nil otherwise.
+func (rc *RuntimeConfig) Reset(preReset PreResetFunc, posReset PostResetFunc) error {
+	return Reset(rc, preReset, posReset)
 }
 
 // Start initializes the runtime filesystem, loads configuration, connects to the database, and starts logging.
@@ -250,6 +270,66 @@ func End(runtimeConfig *RuntimeConfig) error {
 		}
 
 		err = xfs.DeleteFile(runtimeConfig.UserFileSessionLog)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Reset removes the application log and user data directories associated with the given runtime configuration.
+//
+// Parameters:
+//   - runtimeConfig: Target runtime configuration instance.
+//   - preReset: Optional function executed before deleting directories. If provided, reset proceeds only if it returns (true, nil).
+//   - posReset: Optional function executed after deleting directories.
+//
+// Returns:
+//   - error: An error if preReset returns an error or false, directory deletion fails, or posReset fails; nil otherwise.
+func Reset(
+	runtimeConfig *RuntimeConfig,
+	preReset PreResetFunc,
+	posReset PostResetFunc,
+) error {
+	if runtimeConfig == nil {
+		return nil
+	}
+
+	if preReset != nil {
+		ok, err := preReset()
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return xerrors.NewErrorCLI().
+				SetDevMessage("could not perform reset due to primary conditions failure").
+				SetUserMessage("não foi possível efetuar o reset devido a uma falha de condições primárias")
+		}
+	}
+
+	if runtimeConfig.CurrentFileSessionLog != nil {
+		_ = runtimeConfig.CurrentFileSessionLog.Close()
+		runtimeConfig.CurrentFileSessionLog = nil
+	}
+
+	var err error
+	if runtimeConfig.UserLogDir != "" && xfs.Exists(runtimeConfig.UserLogDir) {
+		err = xfs.DeleteDir(runtimeConfig.UserLogDir, true)
+		if err != nil {
+			return err
+		}
+	}
+
+	if runtimeConfig.UserDataDir != "" && xfs.Exists(runtimeConfig.UserDataDir) {
+		err = xfs.DeleteDir(runtimeConfig.UserDataDir, true)
+		if err != nil {
+			return err
+		}
+	}
+
+	if posReset != nil {
+		err = posReset()
 		if err != nil {
 			return err
 		}
