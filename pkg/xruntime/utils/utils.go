@@ -14,6 +14,17 @@ import (
 	"github.com/AeonDigital/Go-Core-xfs/pkg/xfs"
 )
 
+// IsFileNewer compares the modification timestamps of two local files.
+//
+// Parameters:
+//   - pathFileA: Absolute or relative file path of the first file.
+//   - pathFileB: Absolute or relative file path of the second file.
+//
+// Returns:
+//   - isANewer: True if pathFileA was modified more recently than pathFileB, false otherwise.
+//   - newerPath: The path of whichever file was modified more recently.
+//   - olderPath: The path of whichever file was modified earlier.
+//   - err: An error if os.Stat fails for either file.
 func IsFileNewer(
 	pathFileA string,
 	pathFileB string,
@@ -43,6 +54,13 @@ func IsFileNewer(
 	return false, pathFileB, pathFileA, nil
 }
 
+// CreateDirIfNotExists checks if a directory path exists and creates all necessary parent directories if it does not.
+//
+// Parameters:
+//   - dirPath: The path of the directory to be verified and created.
+//
+// Returns:
+//   - error: An error if directory creation fails, or nil if successful/already existing.
 func CreateDirIfNotExists(
 	dirPath string,
 ) error {
@@ -52,6 +70,15 @@ func CreateDirIfNotExists(
 	return nil
 }
 
+// FindFilesInEmbedFS traverses an embedded filesystem and returns paths of files matching a glob or substring pattern.
+//
+// Parameters:
+//   - embedFS: The embedded filesystem instance to search.
+//   - pattern: Glob pattern or case-insensitive substring to search for.
+//
+// Returns:
+//   - matches: A slice of matching file paths relative to the embedded filesystem root.
+//   - err: An error if filesystem traversal encounters an issue.
 func FindFilesInEmbedFS(
 	embedFS embed.FS,
 	pattern string,
@@ -90,12 +117,22 @@ func FindFilesInEmbedFS(
 	return matches, nil
 }
 
-// ExtractEmbedFS extracts an embed.FS into targetDirPath based on the chosen replaceMode and backup flag.
-// Supported replaceMode options:
-//   - "none": If the root embedded directory exists locally, aborts execution immediately.
-//   - "all": Thoroughly deletes the local root directory and extracts everything fresh.
-//   - "miss": Only creates missing files and directories; leaves existing files untouched.
-//   - "changed": Compares SHA-256 hashes and overwrites local files if their content differs from the embedded version.
+// ExtractEmbedFS extracts the directory structure and files from an embed.FS into a target directory.
+//
+// Supported replaceMode strategies:
+//   - "none": If the local root target directory already exists, aborts extraction immediately without modifying files.
+//   - "all": Completely removes existing target directory contents and recreates all embedded files from scratch.
+//   - "miss": Only writes missing files and directories; keeps existing files intact without overwriting.
+//   - "changed": Compares SHA-256 hashes of local files against embedded ones and overwrites only modified files.
+//
+// Parameters:
+//   - embedFS: The source embedded filesystem containing files to extract.
+//   - targetDirPath: Local destination directory where files will be written.
+//   - replaceMode: Strategy ("none", "all", "miss", "changed") determining overwrite behavior.
+//   - backup: When true, creates a timestamped backup copy of existing target directory before replacement.
+//
+// Returns:
+//   - error: An error if directory scanning, backup creation, or file writing fails; nil on success.
 func ExtractEmbedFS(
 	embedFS embed.FS,
 	targetDirPath string,
@@ -216,13 +253,26 @@ func ExtractEmbedFS(
 	})
 }
 
-// Helper: Computes SHA-256 for an in-memory byte slice
+// getSHA256 computes the SHA-256 hash string for an in-memory byte slice.
+//
+// Parameters:
+//   - data: Byte slice to be hashed.
+//
+// Returns:
+//   - string: Hexadecimal encoded SHA-256 hash string.
 func getSHA256(data []byte) string {
 	hash := sha256.Sum256(data)
 	return fmt.Sprintf("%x", hash)
 }
 
-// Helper: Computes SHA-256 for an existing local disk file safely
+// getFileSHA256 computes the SHA-256 hash of a local file on disk.
+//
+// Parameters:
+//   - filePath: Path to the file to be read and hashed.
+//
+// Returns:
+//   - string: Hexadecimal encoded SHA-256 hash string.
+//   - error: Error if the file cannot be opened or read.
 func getFileSHA256(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -237,7 +287,14 @@ func getFileSHA256(filePath string) (string, error) {
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
 }
 
-// Helper: Copies local disk folders recursively to build a flawless backup archive
+// copyLocalDir recursively copies all directories and files from src to dst.
+//
+// Parameters:
+//   - src: Source directory path.
+//   - dst: Destination directory path.
+//
+// Returns:
+//   - error: Error if reading, creating, or copying any file/directory fails; nil on success.
 func copyLocalDir(src string, dst string) error {
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

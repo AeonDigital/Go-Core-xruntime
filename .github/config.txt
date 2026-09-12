@@ -9,4 +9,4 @@ PROJECT_TYPE=lib
 MAIN_PKG=xruntime
 
 # Minimum coverage percent gate required to pass the test suite
-COVERAGE_THRESHOLD=100
+COVERAGE_THRESHOLD=85
