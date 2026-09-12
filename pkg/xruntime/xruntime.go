@@ -304,13 +304,18 @@ func Reset(
 		if !ok {
 			return xerrors.NewErrorCLI().
 				SetDevMessage("could not perform reset due to primary conditions failure").
-				SetUserMessage("não foi possível efetuar o reset devido a uma falha de condições primárias")
+				SetUserMessage("could not perform reset due to primary conditions failure")
 		}
 	}
 
 	if runtimeConfig.CurrentFileSessionLog != nil {
 		_ = runtimeConfig.CurrentFileSessionLog.Close()
 		runtimeConfig.CurrentFileSessionLog = nil
+	}
+
+	if runtimeConfig.DBConfig.DB != nil {
+		_ = runtimeConfig.DBConfig.DB.Close()
+		runtimeConfig.DBConfig.DB = nil
 	}
 
 	var err error
