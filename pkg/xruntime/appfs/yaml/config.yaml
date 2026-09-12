@@ -1,0 +1,30 @@
+# Test App Configuration
+appName: testapp
+version: "1.0.0"
+debug: true
+
+logging:
+  timeFormat: YYYY-MM-DD HH:mm:ss
+  timeZone: UTC
+  logCLI: false
+  logCLILevel: all
+  logCLIColors: false
+  logRegistry: true
+  logRegistryLevel: all
+  logRegistryDirPath: ""
+  logRegistryFileName: ""
+  logRegistryFileMaxSize: 1M
+  logRegistryFileMaxAge: 1d
+
+dbConfig:
+  driver: "sqlite"
+  dsn: ""
+  migrationsDirPath: "[[USER_DATA_DIR]]/appfs/migrations"
+  maxOpenConnections: 1
+  maxIdleConnections: 1
+  connectionMaxLifetime: 30
+  sqlite:
+    mode: "file:"
+    dir: ""
+    fileName: "sqlite.db"
+    querystring: ""
