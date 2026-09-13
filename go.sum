@@ -1,5 +1,3 @@
-github.com/AeonDigital/Go-Core-Utils v0.0.3 h1:hld6BIiRwXuvc5HSDQ9DT5T7kgVfEzZWpQ53nLiEiKw=
-github.com/AeonDigital/Go-Core-Utils v0.0.3/go.mod h1:Lv142S2vEbVv+qh6rcxKxHR/h0pxHCqaNmh9JBjjYjU=
 github.com/AeonDigital/Go-Core-xconfig v0.0.7 h1:Vog9GqomiM4D/Os2ULKfy6OPhYBi7UyPIiozB5rrRdc=
 github.com/AeonDigital/Go-Core-xconfig v0.0.7/go.mod h1:jMhpJZpC3yOp7sau5ldq76sAPrgwMSXoeRvyrpk+CnM=
 github.com/AeonDigital/Go-Core-xdb v0.2.2 h1:Msmy1Z+mNZ81RbgdhUEpbKB2BBU207JCz7BxpqBeJ3A=
@@ -8,6 +6,8 @@ github.com/AeonDigital/Go-Core-xerrors v0.0.8 h1:cTdEiAY27WCIxKO8kWbaIJspHs7Fdf/
 github.com/AeonDigital/Go-Core-xerrors v0.0.8/go.mod h1:WuMei4yMFexZqeABKOuPrDfhUlqa80xp1XAFP/6tObU=
 github.com/AeonDigital/Go-Core-xfs v0.0.7 h1:H8mxDzO+HpCFf7gmc7UiO+dj7irHghgFj+NvO6zHd0c=
 github.com/AeonDigital/Go-Core-xfs v0.0.7/go.mod h1:gmTh4fEwJC8xhp/hp4v6ZTiHU/sFmWpRM1XamBXAaTw=
+github.com/AeonDigital/Go-Core-xutils v0.1.0 h1:oPTfGljaiZyaNxNhS6cTvO/4D2e/qfv8GtQJ+a6Qfdg=
+github.com/AeonDigital/Go-Core-xutils v0.1.0/go.mod h1:naTpY8pfsJWaNU/dxiBkOxXC/Sqhs2jtBb13KBOxSq0=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/google/pprof v0.0.0-20260802141513-ef3492d7dac3 h1:LMLX+LgTNWpfvCBdFebv6EsYotImrt/Ppc5cXIriCSo=
