@@ -3,11 +3,11 @@ module github.com/AeonDigital/Go-Core-xruntime
 go 1.27.0
 
 require (
-	github.com/AeonDigital/Go-Core-Utils v0.0.3
 	github.com/AeonDigital/Go-Core-xconfig v0.0.7
 	github.com/AeonDigital/Go-Core-xdb v0.2.2
 	github.com/AeonDigital/Go-Core-xerrors v0.0.8
 	github.com/AeonDigital/Go-Core-xfs v0.0.7
+	github.com/AeonDigital/Go-Core-xutils v0.1.0
 )
 
 require (

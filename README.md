@@ -1,7 +1,7 @@
 Go-Core-xruntime
 ================================
 
-![Go Test Coverage](https://raw.githubusercontent.com/github.com/AeonDigital/Go-Core-xruntime/badges/.badges/main/coverage.svg)
+![Go Test Coverage](https://raw.githubusercontent.com/AeonDigital/Go-Core-xruntime/badges/.badges/main/coverage.svg)
 
 > [Aeon Digital](http://www.aeondigital.com.br)  
 > rianna@aeondigital.com.br

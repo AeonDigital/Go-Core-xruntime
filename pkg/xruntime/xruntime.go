@@ -12,13 +12,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AeonDigital/Go-Core-Utils/module/xlog/pkg/xlog"
 	"github.com/AeonDigital/Go-Core-xconfig/pkg/xconfig"
 	"github.com/AeonDigital/Go-Core-xconfig/pkg/xconfig/parser/yaml"
 	"github.com/AeonDigital/Go-Core-xdb/pkg/xdb"
 	"github.com/AeonDigital/Go-Core-xerrors/pkg/xerrors"
 	"github.com/AeonDigital/Go-Core-xfs/pkg/xfs"
 	"github.com/AeonDigital/Go-Core-xruntime/pkg/xruntime/utils"
+	"github.com/AeonDigital/Go-Core-xutils/module/xlog/pkg/xlog"
 )
 
 const (
