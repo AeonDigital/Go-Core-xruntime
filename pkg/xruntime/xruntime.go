@@ -192,11 +192,23 @@ func Start(
 		if err != nil {
 			return nil, err
 		}
-	}
+	} else {
+		err = runtime_Populate_From_ConfigJson(runtimeConfig)
+		if err != nil {
+			return nil, err
+		}
 
-	err = runtime_Populate_From_ConfigJson(runtimeConfig)
-	if err != nil {
-		return nil, err
+		runtime_Update_LocalAppFileSystem(runtimeConfig, appName, logDir, dataDir)
+
+		err = runtime_Logging_CheckConfiguration(runtimeConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		err = runtime_Create_ConfigJson(runtimeConfig)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = runtime_DBConfig_InitDB(runtimeConfig)
@@ -400,6 +412,31 @@ func runtime_Define_LocalAppFileSystem(
 	return nil
 }
 
+// runtime_Update_LocalAppFileSystem overrides application directory and file paths when custom log or data directories are provided.
+//
+// Parameters:
+//   - runtimeConfig: Target runtime configuration instance.
+//   - appName: Application name for subdirectory namespacing.
+//   - logDir: Custom log directory path or empty string.
+//   - dataDir: Custom data directory path or empty string.
+func runtime_Update_LocalAppFileSystem(
+	runtimeConfig *RuntimeConfig,
+	appName string,
+	logDir string,
+	dataDir string,
+) {
+	if logDir != "" {
+		runtimeConfig.UserLogDir = filepath.Join(logDir, appName)
+		runtimeConfig.UserFileSessionLog = filepath.Join(runtimeConfig.UserLogDir, FileSessionLog)
+	}
+	if dataDir != "" {
+		runtimeConfig.UserDataDir = filepath.Join(dataDir, appName)
+		runtimeConfig.UserFileConfigYAML = filepath.Join(runtimeConfig.UserDataDir, DirAppFSYAML, FileConfigYAML)
+		runtimeConfig.UserFileConfigJson = filepath.Join(runtimeConfig.UserDataDir, FileConfigJson)
+		runtimeConfig.UserFileSQLiteData = filepath.Join(runtimeConfig.UserDataDir, FileSQLiteData)
+	}
+}
+
 // runtime_Delete_ConfigJson_If_Outdated removes the compiled JSON cache if the source YAML config has a newer timestamp.
 //
 // Parameters:
@@ -520,6 +557,10 @@ func runtime_Rewrite_Properties(runtimeConfig *RuntimeConfig) error {
 // Returns:
 //   - error: An error if the logging configuration validation fails; nil on success.
 func runtime_Logging_CheckConfiguration(runtimeConfig *RuntimeConfig) error {
+	if runtimeConfig.Logging.LogRegistryDirPath == "" || runtimeConfig.Logging.LogRegistryDirPath != runtimeConfig.UserLogDir {
+		runtimeConfig.Logging.LogRegistryDirPath = runtimeConfig.UserLogDir
+	}
+
 	err := runtimeConfig.Logging.CheckConfiguration(FileSessionLog)
 	if err != nil {
 		return err

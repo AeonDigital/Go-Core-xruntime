@@ -285,7 +285,7 @@ func TestReset_PreResetReturnsFalse(t *testing.T) {
 		t.Fatalf("expected error to implement xerrors.IErrorCLI, got %T", err)
 	}
 
-	expectedUserMsg := "não foi possível efetuar o reset devido a uma falha de condições primárias"
+	expectedUserMsg := "could not perform reset due to primary conditions failure"
 	if cliErr.GetUserMessage() != expectedUserMsg {
 		t.Errorf("expected GetUserMessage() = %q, got %q", expectedUserMsg, cliErr.GetUserMessage())
 	}
