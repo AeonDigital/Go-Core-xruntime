@@ -92,6 +92,9 @@ type RuntimeConfig struct {
 	// CurrentDateTime is the timestamp string representing when the session was initiated.
 	CurrentDateTime string
 
+	// WorkingDirectory is the directory where the clip was started. It is called the working directory.
+	WorkingDirectory string
+
 	// Logging contains structured logging configurations and handlers.
 	Logging xlog.LogHandler `json:"logging"`
 
@@ -373,6 +376,11 @@ func runtime_Define_LocalAppFileSystem(
 ) error {
 	var err error
 
+	workingDirectory, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
 	if logDir == "" {
 		// Directory where logs are saved
 		logDir, err = xfs.GetUserLogDir()
@@ -390,6 +398,7 @@ func runtime_Define_LocalAppFileSystem(
 	}
 
 	runtimeConfig.AppName = appName
+	runtimeConfig.WorkingDirectory = workingDirectory
 
 	// path to current log dir
 	runtimeConfig.UserLogDir = filepath.Join(logDir, appName)
